@@ -6,7 +6,7 @@ PACKAGE		=oss-proxy
 SUBDIRS		=etc usr var
 
 dist:
-		sed "s/@VERSION@/$(VERSION)/"      $(PACKAGE).spec.template > $(PACKAGE).spec
+		sed "s/@VERSION@/$(VERSION)/"      $(PACKAGE).spec.in > $(PACKAGE).spec
 		sed -i "s/@PACKAGE@/$(PACKAGE)/"   $(PACKAGE).spec
 		sed -i "s/@PRODNAME@/$(PRODNAME)/" $(PACKAGE).spec
 		sed -i "s/@RELEASE@/$(RELEASE)/"   $(PACKAGE).spec

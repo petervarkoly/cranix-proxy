@@ -1,7 +1,7 @@
 #
 # spec file for package oss-proxy (Version @VERSION@)
 #
-# Copyright (c) 2012 Peter Varkoly, Nürnberg, Germany.
+# Copyright (c) 2017 Peter Varkoly, Nürnberg, Germany.
 # This file and all modifications and additions to the pristine
 # package are under the same license as the package itself.
 #
@@ -14,7 +14,7 @@ Packager:     peter@varkoly.de
 Vendor:       Peter Varkoly, Nuremberg, Germany
 Group:        Productivity/Networking/Web/Proxy
 Autoreqprov:  no
-Summary:      Proxy extensions for the @PRODNAME@ 
+Summary:      Proxy extensions for the OSS/UBS 
 Version:      @VERSION@
 Release:      @RELEASE@
 Source:       oss-proxy.tar.bz2
@@ -25,7 +25,7 @@ Provides:     blacklist-openschool <= 3.3.0
 Obsoletes:    blacklist-openschool = %{version}
 Prereq:       squid squidGuard lmd cron
 %description
-Proxy extensions for the for the @PRODNAME@
+Proxy extensions for the for the OSS/UBS
 
 Authors:
 --------
@@ -68,7 +68,7 @@ fi
 %config /etc/squid/squidguard.conf
 %defattr(755,root,root)
 /etc/cron.weekly/oss-blacklist
-/usr/sbin/oss_init_shallalist.sh
+/usr/sbin/oss_*.sh
 /usr/share/oss/tools/*
 %defattr(640,squid,nogroup,750)
 /var/lib/squidGuard/db/shallalist.tar.gz
