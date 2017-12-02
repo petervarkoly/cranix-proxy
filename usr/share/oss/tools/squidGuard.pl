@@ -12,36 +12,38 @@ my $job=shift;
 sub readSetting {
 	my $config = parse_config();
 	my $acls   = find_section($config,{ sectype => 'acl' });
-	my $allAllowed = %{};
-	my $reply      = %{};
+	my $allAllowed = {};
+	my $reply      = {};
         foreach my $acl (@{$acls->{members}})
         {
 		my $source =  $acl->{source};
 		foreach my $pass ( @{$acl->{pass}} )
 		{
 			if( $pass =~ /!(.*)/ ) {
-				$reply->{acls}->{$1}->{$sorce} = "false";
+				$reply->{acls}->{$1}->{$source} = "N";
 			} else {
-				$reply->{acls}->{$pass}->{$sorce} = "true";
+				$reply->{acls}->{$pass}->{$source} = "Y";
 			}
 		}
-		if( defined $reply->{acls}->{all}->{$sorce} ) {
-			$allAllowed->{$sorce} = "true";
+		if( defined $reply->{acls}->{all}->{$source} ) {
+			$allAllowed->{$source} = "Y";
 		} else {
-			$allAllowed->{$sorce} = "fales";
+			$allAllowed->{$source} = "N";
 		}
         }
 	my @primaries = `oss_api_text.sh GET groups/text/byType/primary`;
 	push @primaries, 'default';
 	foreach my $pass ( get_lists() ) {
+		chomp $pass;
 		my @ACLS = ($pass);
 		foreach my $source ( @primaries ) {
-			if( defined $reply->{acls}->{$pass}->{$sorce} ) {
-				push @ACLS "$sorce:".$reply->{acls}->{$pass}->{$sorce};
-			} elsif ( defined $reply->{acls}->{all}->{$sorce} ) {
-				push @ACLS "$sorce:".$reply->{acls}->{all}->{$sorce};
+			chomp $source;
+			if( defined $reply->{acls}->{$pass}->{$source} ) {
+				push @ACLS, "$source:".$reply->{acls}->{$pass}->{$source};
+			} elsif ( defined $reply->{acls}->{all}->{$source} ) {
+				push @ACLS, "$source:".$reply->{acls}->{all}->{$source};
 			} else {
-				push @ACLS "$sorce:".$reply->{acls}->{all}->{default};
+				push @ACLS, "$source:".$reply->{acls}->{all}->{default};
 			}
 		}
 		print join(" ",@ACLS)."\n";	
@@ -61,7 +63,6 @@ sub printAll {
 ################################################################
 sub apply
 {
-	my $this  = shift;
 	my $reply = shift;
 	my %acls  = ();
 	my $srcWritten = 0;
@@ -76,14 +77,16 @@ sub apply
 		{
 			foreach my $p ( @primaries )
 			{
-				push @{$acls{$p}}, ($reply->{acls}->{$acl}->{$p} eq 'true' ) ? 'all' : 'none';
+				chomp $p;
+				push @{$acls{$p}}, ($reply->{acls}->{$acl}->{$p} eq 'Y' ) ? 'all' : 'none';
 			}
 		}
 		else
 		{
 			foreach my $p ( @primaries )
 			{
-				push @{$acls{$p}}, ($reply->{acls}->{$acl}->{$p} eq 'true' ) ? $acl : "!$acl";
+				chomp $p;
+				push @{$acls{$p}}, ($reply->{acls}->{$acl}->{$p} eq 'Y' ) ? $acl : "!$acl";
 			}
 		}
 	}	
@@ -105,6 +108,7 @@ sub apply
 			next if $srcWritten;
 			foreach my $p ( @primaries )
 			{
+				chomp $p;
 				next if $p eq 'default';
 				print SG "src $p {\n\tuser $p\n}\n";
 			}
@@ -124,6 +128,7 @@ sub apply
 			print SG "acl {\n";
 			foreach my $p ( @primaries )
 			{
+				chomp $p;
 				if( $p eq 'default' )
 				{
 					print SG "\t$p {\n";
@@ -150,11 +155,11 @@ sub apply
 
 sub get_lists
 {
-	open(IN,"/usr/share/oss/templates/squidGuard/blacklists");
+	open(IN,"/usr/share/oss/templates/blacklists");
 	my @BL = <IN>;
 	close(IN);
 	#@BL = main::sort_by_lang(\@BL);
-	open(IN,"/usr/share/oss/templates/squidGuard/whitelists");
+	open(IN,"/usr/share/oss/templates/whitelists");
 	my @WL = <IN>;
 	close(IN);
 	#@WL = main::sort_by_lang(\@WL);
@@ -681,13 +686,38 @@ elsif( $job eq "printAll" )
 }
 elsif( $job eq "write" )
 {
-	my $reply = {};
+	my $config = parse_config();
+	my $acls   = find_section($config,{ sectype => 'acl' });
+	my $allAllowed = {};
+	my $reply      = {};
+        foreach my $acl (@{$acls->{members}})
+        {
+		my $source =  $acl->{source};
+		foreach my $pass ( @{$acl->{pass}} )
+		{
+			if( $pass =~ /!(.*)/ ) {
+				$reply->{acls}->{$1}->{$source} = "N";
+			} else {
+				$reply->{acls}->{$pass}->{$source} = "Y";
+			}
+		}
+		if( defined $reply->{acls}->{all}->{$source} ) {
+			$allAllowed->{$source} = "Y";
+		} else {
+			$allAllowed->{$source} = "N";
+		}
+        }
 	while(<>)
 	{
-		/(.*)#(.*)#(.#)/;
-		$reply->{acls}->{$1}->{$2} = $3;
+		if( /(.*):(.*):(.*)$/ ) {
+			$reply->{acls}->{$1}->{$2} = $3;
+		}
 	}
 	apply($reply);
+}
+else
+{
+	print "\n\nUsage /usr/share/oss/tools/squidGuard.pl read|printAll|write\n\n";
 }
 
 1;
