@@ -1,0 +1,50 @@
+# Listen only on proxy interface
+http_port proxy:8080
+
+# Uncomment and adjust the following to add a disk cache directory.
+#cache_dir aufs /var/cache/squid 100 16 256
+
+# Leave coredumps in the first cache dir
+coredump_dir /var/cache/squid
+
+# squidGuard redirection with safe browsing
+redirect_program /usr/sbin/squidGuard -c /etc/squid/squidguard.conf
+redirect_children 10
+
+#OSS SSO acl
+external_acl_type checkip ttl=60 children-max=30 %SRC /usr/share/oss/tools/oss_squid_sso.sh
+acl SSO external checkip
+
+#Some default ACLs
+acl SSL_ports port 443
+acl Safe_ports port 80          # http
+acl Safe_ports port 21          # ftp
+acl Safe_ports port 443         # https
+acl Safe_ports port 70          # gopher
+acl Safe_ports port 210         # wais
+acl Safe_ports port 1025-65535  # unregistered ports
+acl Safe_ports port 280         # http-mgmt
+acl Safe_ports port 488         # gss-http
+acl Safe_ports port 591         # filemaker
+acl Safe_ports port 777         # multiling http
+acl CONNECT method CONNECT
+
+#
+# Recommended minimum Access Permission configuration:
+#
+# Deny requests to certain unsafe ports
+http_access deny !Safe_ports
+
+# Deny CONNECT to other than secure SSL ports
+http_access deny CONNECT !SSL_ports
+
+# Only allow cachemgr access from localhost
+http_access allow localhost manager
+http_access deny manager
+
+# Allow OSS-SSO autorized users
+http_access allow SSO
+
+# And finally deny all other access to this proxy
+http_access deny all
+
