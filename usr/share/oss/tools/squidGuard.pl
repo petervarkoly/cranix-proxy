@@ -8,6 +8,52 @@ my $conffile = '/etc/squid/squidguard.conf';
 my $bin      = '/usr/sbin/squidGuard';
 
 my $job=shift;
+my $NAME=shift || 'default';
+
+my @Sources = ();
+my @Destinations = ();
+
+sub readRoomSetting
+{
+	my $room   = shift;
+	my $source = "";
+	my $config = parse_config();
+	my $acls   = find_section($config,{ sectype => 'acl' });
+	my $allAllowed = {};
+	my $reply      = {};
+        foreach my $acl (@{$acls->{members}})
+        {
+		$source =  $acl->{source};
+		next if ( $source ne $room );
+		foreach my $pass ( @{$acl->{pass}} )
+		{
+			if( $pass =~ /!(.*)/ ) {
+				$reply->{acls}->{$source}->{$1} = "false";
+			} else {
+				$reply->{acls}->{$source}->{$pass} = "true";
+			}
+		}
+		if( defined $reply->{acls}->{$source}->{all} ) {
+			$allAllowed->{$source} = "true";
+		} else {
+			$allAllowed->{$source} = "false";
+		}
+        }
+	my @ACLS = ();
+	$source = $room;
+	foreach my $pass ( get_lists() ) {
+		chomp $pass;
+		if( defined $reply->{acls}->{$source}->{$pass} ) {
+			push @ACLS, "$pass:".$reply->{acls}->{$source}->{$pass};
+		} elsif ( defined $reply->{acls}->{$source}->{all} ) {
+			push @ACLS, "$pass:".$reply->{acls}->{$source}->{all};
+		} else {
+			my $value = defined $reply->{acls}->{default}->{$pass} ? $reply->{acls}->{default}->{all} : $reply->{acls}->{default}->{all};
+			push @ACLS, "$pass:".$value;
+		}
+	}
+	print join(" ",@ACLS)."\n";
+}
 
 sub readSetting {
 	my $config = parse_config();
@@ -20,33 +66,35 @@ sub readSetting {
 		foreach my $pass ( @{$acl->{pass}} )
 		{
 			if( $pass =~ /!(.*)/ ) {
-				$reply->{acls}->{$1}->{$source} = "N";
+				$reply->{acls}->{$source}->{$1} = "false";
 			} else {
-				$reply->{acls}->{$pass}->{$source} = "Y";
+				$reply->{acls}->{$source}->{$pass} = "true";
 			}
 		}
-		if( defined $reply->{acls}->{all}->{$source} ) {
-			$allAllowed->{$source} = "Y";
+		if( defined $reply->{acls}->{$source}->{all} ) {
+			$allAllowed->{$source} = "true";
 		} else {
-			$allAllowed->{$source} = "N";
+			$allAllowed->{$source} = "false";
 		}
         }
 	my @primaries = `oss_api_text.sh GET groups/text/byType/primary`;
 	push @primaries, 'default';
-	foreach my $pass ( get_lists() ) {
-		chomp $pass;
-		my @ACLS = ($pass);
-		foreach my $source ( @primaries ) {
-			chomp $source;
-			if( defined $reply->{acls}->{$pass}->{$source} ) {
-				push @ACLS, "$source:".$reply->{acls}->{$pass}->{$source};
-			} elsif ( defined $reply->{acls}->{all}->{$source} ) {
-				push @ACLS, "$source:".$reply->{acls}->{all}->{$source};
+	foreach my $source ( @primaries ) {
+		chomp $source;
+		next if( $source =~ /^templates|workstations$/ );
+		my @ACLS = ($source);
+		foreach my $pass ( get_lists() ) {
+			chomp $pass;
+			if( defined $reply->{acls}->{$source}->{$pass} ) { 
+				push @ACLS, "$pass:".$reply->{acls}->{$source}->{$pass};
+			} elsif ( defined $reply->{acls}->{$source}->{all} ) {
+				push @ACLS, "$pass:".$reply->{acls}->{$source}->{all};
 			} else {
-				push @ACLS, "$source:".$reply->{acls}->{all}->{default};
+				my $value = defined $reply->{acls}->{default}->{$pass} ? $reply->{acls}->{default}->{all} : $reply->{acls}->{default}->{all};
+				push @ACLS, "$pass:".$value;
 			}
 		}
-		print join(" ",@ACLS)."\n";	
+		print join(" ",@ACLS)."\n";
 	}
 }
 
@@ -70,6 +118,7 @@ sub apply
 	my $dbHome     = "/var/lib/squidGuard/db";
 	my @primaries = `oss_api_text.sh GET groups/text/byType/primary`;
 	push @primaries, 'default';
+	my @DefinedSources = ();
 	foreach my $acl (get_lists())
 	{
 		chomp $acl;
@@ -78,7 +127,8 @@ sub apply
 			foreach my $p ( @primaries )
 			{
 				chomp $p;
-				push @{$acls{$p}}, ($reply->{acls}->{$acl}->{$p} eq 'Y' ) ? 'all' : 'none';
+				next if( $p =~ /^templates|workstations$/ );
+				push @{$acls{$p}}, ($reply->{acls}->{$p}->{$acl} eq "true" ) ? 'all' : 'none';
 			}
 		}
 		else
@@ -86,7 +136,8 @@ sub apply
 			foreach my $p ( @primaries )
 			{
 				chomp $p;
-				push @{$acls{$p}}, ($reply->{acls}->{$acl}->{$p} eq 'Y' ) ? $acl : "!$acl";
+				next if( $p =~ /^templates|workstations$/ );
+				push @{$acls{$p}}, ($reply->{acls}->{$p}->{$acl} eq "true" ) ? $acl : "!$acl";
 			}
 		}
 	}	
@@ -105,13 +156,13 @@ sub apply
 		}
 		elsif( $sec->{sectype} eq 'source' )
 		{
-			next if $srcWritten;
-			foreach my $p ( @primaries )
-			{
-				chomp $p;
-				next if $p eq 'default';
-				print SG "src $p {\n\tuser $p\n}\n";
+			if(!$srcWritten and defined $reply->{source}) {
+				my $newSource = $reply->{source};
+				print SG "src $newSource {\n\tuser $newSource\n}\n\n";
 			}
+			#TODO at the moment we only can handle user type sources
+			my $p = $sec->{members}->[0]->{user};
+			print SG "src $p {\n\tuser $p\n}\n\n";
 			$srcWritten = 1;
 		}
 		elsif( $sec->{sectype} eq 'dest' )
@@ -124,30 +175,76 @@ sub apply
 		}
 		elsif( $sec->{sectype} eq 'acl' )
 		{
-			next if $aclWritten;
-			print SG "acl {\n";
-			foreach my $p ( @primaries )
-			{
-				chomp $p;
-				if( $p eq 'default' )
-				{
-					print SG "\t$p {\n";
-					print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
-					print SG "\t\tredirect ".'302:http://admin/cgi-bin/login.pl/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
-					print SG "\t}\n";
-				}
-				else
-				{
-					print SG "\t$p {\n";
-					print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
-					print SG "\t\tredirect ".'302:http://admin/cgi-bin/oss-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
-					print SG "\t}\n";
-				}
+			if( defined $reply->{destination} && !$aclWritten ) {
+				print SG 'dest '.$reply->{destination}." {\n";
+				print SG "\tdomainlist PL/".$reply->{destination}."/domains\n";
+				print SG "}\n\n";
 			}
-			print SG "}\n\n";
+			print SG "acl {\n" if( !$aclWritten );
 			$aclWritten = 1;
-		}	
+			#First we writes the non rimary group acls
+			foreach my $acl (@{$sec->{members}}) {
+				my $source =  $acl->{source};	
+				push @DefinedSources, $source;
+				#This will be written at the end
+				next if( grep(/$source/,@primaries) );
+				#This source should be deleted
+				next if( defined $reply->{acls}->{$source}->{'remove-this-list'} );
+				my @ACLS = ();
+				foreach my $key ( keys %{$reply->{acls}->{$source}} ) {
+					next if($key eq 'all');
+					push @ACLS, $reply->{acls}->{$source}->{$key} eq "true" ? $key : "!$key";
+				}
+				if( defined $reply->{acls}->{$source}->{all} ) {
+					push @ACLS, $reply->{acls}->{$source}->{all} eq "true" ? 'all' : 'none';
+				}
+				print SG "\t$source {\n";
+				print SG "\t\tpass ".join(" ",@ACLS)."\n";
+				print SG "\t\tredirect ".'302:http://admin/cgi-bin/oss-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
+				print SG "\t}\n";
+			}
+		}
 	}
+	#Now we are searching for new sources
+	foreach my $source ( keys %{$reply->{acls}} ) {
+		next if( grep(/$source/, @DefinedSources ));
+		next if( defined $reply->{acls}->{$source}->{'remove-this-list'} );
+		my @ACLS = ();
+		foreach my $key ( keys %{$reply->{acls}->{$source}} ) {
+			next if($key eq 'all');
+			push @ACLS, $reply->{acls}->{$source}->{$key} eq "true" ? $key : "!$key";
+		}
+		if( defined $reply->{acls}->{$source}->{all} ) {
+			push @ACLS, $reply->{acls}->{$source}->{all} eq "true" ? 'all' : 'none';
+		} else {
+			push @ACLS, 'none';
+		}
+		print SG "\t$source {\n";
+		print SG "\t\tpass ".join(" ",@ACLS)."\n";
+		print SG "\t\tredirect ".'302:http://admin/cgi-bin/oss-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
+		print SG "\t}\n";
+	}
+	foreach my $p ( @primaries )
+	{
+		chomp $p;
+		next if( $p =~ /^templates|workstations$/ );
+		next if( ! defined $acls{$p} );
+		if( $p eq 'default' )
+		{
+			print SG "\t$p {\n";
+			print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
+			print SG "\t\tredirect ".'302:https://admin/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
+			print SG "\t}\n";
+		}
+		else
+		{
+			print SG "\t$p {\n";
+			print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
+			print SG "\t\tredirect ".'302:http://admin/cgi-bin/oss-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
+			print SG "\t}\n";
+		}
+	}
+	print SG "}\n\n";
 	close SG;
 	sgchown();
 	system("/usr/sbin/oss_refres_squidGuard_user.sh");
@@ -353,6 +450,8 @@ sub parse_config {
          $section{'line'}=$i;
          $section{'tstype'} = $4;
          $section{'timespace'} = $5;
+      push @Sources, $2;
+
       my @members=();
 
       $c[$i] = unify($c[++$i]);
@@ -442,6 +541,7 @@ sub parse_config {
          $section{'line'}=$i;
          $section{'tstype'}=$4;
          $section{'timespace'}=$5;
+      push @Destinations, $2;
 
       $c[$i] = unify($c[++$i]);
       while(($i < scalar(@c)) && ($c[$i] !~ /^\s*\}/)) {
@@ -643,13 +743,12 @@ sub sgchown {
 # Rebuild the dbfile $file with squidguard -C
 sub rebuild_db {
   system("$bin -C '$_[0]' -c '$conffile");
-  reload_squid();
 }
 
 # reload_squid
 # Send Squid the HUP signal when db is rebuild
 sub reload_squid {
-    system("systemctl reload squid");
+    system("systemctl restart squid");
 }
 
 sub unify {
@@ -680,9 +779,84 @@ if( $job eq "read" )
 {
 	readSetting();
 }
+elsif( $job eq "readRoom" )
+{
+	readRoomSetting($NAME);
+}
 elsif( $job eq "printAll" )
 {
 	printAll();
+}
+elsif( $job eq "writeSource" )
+{
+	my $config = parse_config();
+	open(OUT,">/var/lib/squidGuard/db/$NAME");
+	while(<>)
+	{
+		print OUT;
+	}
+	close(OUT);
+	if( !grep(/$NAME/,@Sources) ) {
+		my $allAllowed = {};
+		my $reply      = {};
+		my $acls   = find_section($config,{ sectype => 'acl' });
+		foreach my $acl (@{$acls->{members}})
+		{
+			my $source =  $acl->{source};
+			foreach my $pass ( @{$acl->{pass}} )
+			{
+				if( $pass =~ /!(.*)/ ) {
+					$reply->{acls}->{$source}->{$1} = "false";
+				} else {
+					$reply->{acls}->{$source}->{$pass} = "true";
+				}
+			}
+			if( defined $reply->{acls}->{$source}->{all} ) {
+				$allAllowed->{$source} = "true";
+			} else {
+				$allAllowed->{$source} = "false";
+			}
+		}
+		$reply->{source} = $NAME;
+		apply($reply);
+	}
+}
+elsif( $job eq "writePositiveList" )
+{
+	my $config = parse_config();
+	system("mkdir -p /var/lib/squidGuard/db/PL/$NAME/" ); 
+	open(OUT,">/var/lib/squidGuard/db/PL/$NAME/domains");
+	while(<>)
+	{
+		print OUT;
+	}
+	close(OUT);
+	if( !grep(/$NAME/,@Destinations) ) {
+		my $allAllowed = {};
+		my $reply      = {};
+		my $acls   = find_section($config,{ sectype => 'acl' });
+		foreach my $acl (@{$acls->{members}})
+		{
+			my $source =  $acl->{source};
+			foreach my $pass ( @{$acl->{pass}} )
+			{
+				if( $pass =~ /!(.*)/ ) {
+					$reply->{acls}->{$source}->{$1} = "false";
+				} else {
+					$reply->{acls}->{$source}->{$pass} = "true";
+				}
+			}
+			if( defined $reply->{acls}->{$source}->{all} ) {
+				$allAllowed->{$source} = "true";
+			} else {
+				$allAllowed->{$source} = "false";
+			}
+		}
+		$reply->{destination} = $NAME;
+		apply($reply);
+	}
+	sgchown();
+	system("echo '' | /usr/sbin/squidGuard -C PL/$NAME/domains -c /etc/squid/squidguard.conf");
 }
 elsif( $job eq "write" )
 {
@@ -696,15 +870,15 @@ elsif( $job eq "write" )
 		foreach my $pass ( @{$acl->{pass}} )
 		{
 			if( $pass =~ /!(.*)/ ) {
-				$reply->{acls}->{$1}->{$source} = "N";
+				$reply->{acls}->{$source}->{$1} = "false";
 			} else {
-				$reply->{acls}->{$pass}->{$source} = "Y";
+				$reply->{acls}->{$source}->{$pass} = "true";
 			}
 		}
-		if( defined $reply->{acls}->{all}->{$source} ) {
-			$allAllowed->{$source} = "Y";
+		if( defined $reply->{acls}->{$source}->{all} ) {
+			$allAllowed->{$source} = "true";
 		} else {
-			$allAllowed->{$source} = "N";
+			$allAllowed->{$source} = "false";
 		}
         }
 	while(<>)
