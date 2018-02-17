@@ -23,7 +23,11 @@ BuildArchitectures: noarch
 BuildRequires: -brp-check-suse
 Provides:     blacklist-openschool <= 3.3.0
 Obsoletes:    blacklist-openschool = %{version}
-Prereq:       squid squidGuard oss-base oss-java cron
+Prereq:       squid
+Prereq:	      squidGuard
+Prereq:       oss-base
+Prereq:       oss-java-base
+Prereq:       cron
 %description
 Proxy extensions for the for the OSS/UBS
 
