@@ -66,6 +66,9 @@ then
 		#sed -i "s#^redirect_program.*#redirect_program /usr/sbin/squidGuard -c /etc/squid/squidguard.conf -s#" /etc/squid/squid.conf
 		echo "Update."
 	else
+		. /etc/sysconfig/schoolserver
+		sed s/#DOMAIN#/$SCHOOL_DOMAIN/g /srv/www/admin/proxy.pac.in > /srv/www/admin/proxy.pac
+		ln  /srv/www/admin/proxy.pac /srv/www/admin/wpad.dat
 	        cp /etc/squid/squid.conf.in      /etc/squid/squid.conf
 		/usr/sbin/oss_init_shallalist.sh
 	fi
