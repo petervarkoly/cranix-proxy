@@ -27,6 +27,7 @@ Prereq:       squid
 Prereq:	      squidGuard
 Prereq:       oss-base
 Prereq:       java-base-api
+Prereq:       apache2
 Prereq:       cron
 %description
 Proxy extensions for the for the OSS/UBS
@@ -49,6 +50,7 @@ mkdir -p  $RPM_BUILD_ROOT
 cp -a var $RPM_BUILD_ROOT
 cp -a etc $RPM_BUILD_ROOT
 cp -a usr $RPM_BUILD_ROOT
+cp -a www $RPM_BUILD_ROOT
 
 %pre
 %service_add_pre squid.service
@@ -92,4 +94,6 @@ fi
 %dir /var/lib/squidGuard/db/custom/bad
 %config(noreplace) /var/lib/squidGuard/db/custom/good/*
 %config(noreplace) /var/lib/squidGuard/db/custom/bad/*
-
+/usr/share/apache2/icons/stop.gif
+/srv/www/cgi-bin/oss-stop.cgi
+/srv/www/admin/proxy.pac.in

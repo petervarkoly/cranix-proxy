@@ -3,7 +3,7 @@ RELEASE         = $(shell cat RELEASE)
 NRELEASE        = $(shell echo $(RELEASE) + 1 | bc )
 HERE		= $(shell pwd)
 PACKAGE		=oss-proxy
-SUBDIRS		=etc usr var
+SUBDIRS		=etc usr var srv
 
 dist:
 		sed "s/@VERSION@/$(VERSION)/"      $(PACKAGE).spec.in > $(PACKAGE).spec
