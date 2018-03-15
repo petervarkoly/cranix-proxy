@@ -99,4 +99,5 @@ fi
 %config(noreplace) /var/lib/squidGuard/db/custom/bad/*
 /usr/share/apache2/icons/stop.gif
 /srv/www/cgi-bin/oss-stop.cgi
+%dir /srv/www/admin
 /srv/www/admin/proxy.pac.in
