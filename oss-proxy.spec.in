@@ -83,6 +83,8 @@ fi
 
 %files 
 %defattr(644,root,root,755)
+%dir /srv/www/admin
+/srv/www/admin/proxy.pac.in
 /usr/share/oss/templates/*
 %config /etc/logrotate.d/oss-blacklist
 %config /etc/squid/squid.conf.in
@@ -101,5 +103,3 @@ fi
 %config(noreplace) /var/lib/squidGuard/db/custom/bad/*
 /usr/share/apache2/icons/stop.gif
 /srv/www/cgi-bin/oss-stop.cgi
-%dir /srv/www/admin
-/srv/www/admin/proxy.pac.in
