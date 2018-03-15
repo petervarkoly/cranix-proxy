@@ -50,7 +50,7 @@ mkdir -p  $RPM_BUILD_ROOT
 cp -a var $RPM_BUILD_ROOT
 cp -a etc $RPM_BUILD_ROOT
 cp -a usr $RPM_BUILD_ROOT
-cp -a www $RPM_BUILD_ROOT
+cp -a srv $RPM_BUILD_ROOT
 
 %pre
 %service_add_pre squid.service
