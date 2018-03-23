@@ -6,5 +6,5 @@ do
     /usr/sbin/oss_api_text.sh GET groups/text/$p/members > $dbHome/$p
 done
 
-systemctl reload squid
+systemctl restart squid
 

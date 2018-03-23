@@ -21,37 +21,17 @@ sub readRoomSetting
 	my $acls   = find_section($config,{ sectype => 'acl' });
 	my $allAllowed = {};
 	my $reply      = {};
+	my @ACLS = ();
         foreach my $acl (@{$acls->{members}})
         {
 		$source =  $acl->{source};
 		next if ( $source ne $room );
 		foreach my $pass ( @{$acl->{pass}} )
 		{
-			if( $pass =~ /!(.*)/ ) {
-				$reply->{acls}->{$source}->{$1} = "false";
-			} else {
-				$reply->{acls}->{$source}->{$pass} = "true";
-			}
-		}
-		if( defined $reply->{acls}->{$source}->{all} ) {
-			$allAllowed->{$source} = "true";
-		} else {
-			$allAllowed->{$source} = "false";
+			next if $pass eq 'none';
+			push @ACLS,$pass;
 		}
         }
-	my @ACLS = ();
-	$source = $room;
-	foreach my $pass ( get_lists() ) {
-		chomp $pass;
-		if( defined $reply->{acls}->{$source}->{$pass} ) {
-			push @ACLS, "$pass:".$reply->{acls}->{$source}->{$pass};
-		} elsif ( defined $reply->{acls}->{$source}->{all} ) {
-			push @ACLS, "$pass:".$reply->{acls}->{$source}->{all};
-		} else {
-			my $value = defined $reply->{acls}->{default}->{$pass} ? $reply->{acls}->{default}->{all} : $reply->{acls}->{default}->{all};
-			push @ACLS, "$pass:".$value;
-		}
-	}
 	print join(" ",@ACLS)."\n";
 }
 
@@ -158,11 +138,11 @@ sub apply
 		{
 			if(!$srcWritten and defined $reply->{source}) {
 				my $newSource = $reply->{source};
-				print SG "src $newSource {\n\tuser $newSource\n}\n\n";
+				print SG "src $newSource {\n\t".$reply->{sourcetype}." $newSource\n}\n\n";
 			}
-			#TODO at the moment we only can handle user type sources
-			my $p = $sec->{members}->[0]->{user};
-			print SG "src $p {\n\tuser $p\n}\n\n";
+			#TODO at the moment we only can handle userlist type sources
+			my $p = $sec->{members}->[0]->{userlist};
+			print SG "src $p {\n\tuserlist $p\n}\n\n";
 			$srcWritten = 1;
 		}
 		elsif( $sec->{sectype} eq 'dest' )
@@ -247,7 +227,9 @@ sub apply
 	print SG "}\n\n";
 	close SG;
 	sgchown();
-	system("/usr/sbin/oss_refres_squidGuard_user.sh");
+	if( $job ne "writeIpSource" && $job ne "writeUserSource") {
+	    system("/usr/sbin/oss_refres_squidGuard_user.sh");
+	}
 }
 
 sub get_lists
@@ -787,7 +769,7 @@ elsif( $job eq "printAll" )
 {
 	printAll();
 }
-elsif( $job eq "writeSource" )
+elsif( $job eq "writeUserSource" )
 {
 	my $config = parse_config();
 	open(OUT,">/var/lib/squidGuard/db/$NAME");
@@ -818,6 +800,42 @@ elsif( $job eq "writeSource" )
 			}
 		}
 		$reply->{source} = $NAME;
+		$reply->{sourcetype} = 'userlist';
+		apply($reply);
+	}
+}
+elsif( $job eq "writeIpSource" )
+{
+	my $config = parse_config();
+	open(OUT,">/var/lib/squidGuard/db/$NAME");
+	while(<>)
+	{
+		print OUT;
+	}
+	close(OUT);
+	if( !grep(/$NAME/,@Sources) ) {
+		my $allAllowed = {};
+		my $reply      = {};
+		my $acls   = find_section($config,{ sectype => 'acl' });
+		foreach my $acl (@{$acls->{members}})
+		{
+			my $source =  $acl->{source};
+			foreach my $pass ( @{$acl->{pass}} )
+			{
+				if( $pass =~ /!(.*)/ ) {
+					$reply->{acls}->{$source}->{$1} = "false";
+				} else {
+					$reply->{acls}->{$source}->{$pass} = "true";
+				}
+			}
+			if( defined $reply->{acls}->{$source}->{all} ) {
+				$allAllowed->{$source} = "true";
+			} else {
+				$allAllowed->{$source} = "false";
+			}
+		}
+		$reply->{source} = $NAME;
+		$reply->{sourcetype} = 'iplist';
 		apply($reply);
 	}
 }
