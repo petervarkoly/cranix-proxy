@@ -68,7 +68,9 @@ then
 	else
 		. /etc/sysconfig/schoolserver
 		sed s/#DOMAIN#/$SCHOOL_DOMAIN/g /srv/www/admin/proxy.pac.in > /srv/www/admin/proxy.pac
-		ln  /srv/www/admin/proxy.pac /srv/www/admin/wpad.dat
+		if [ ! -e /srv/www/admin/wpad.dat ]; then 
+			ln  /srv/www/admin/proxy.pac /srv/www/admin/wpad.dat
+		fi
 	        cp /etc/squid/squid.conf.in      /etc/squid/squid.conf
 		/usr/sbin/oss_init_shallalist.sh
 	fi
@@ -81,6 +83,10 @@ fi
 
 %files 
 %defattr(644,root,root,755)
+%dir /srv/www/admin
+/srv/www/admin/proxy.pac.in
+/usr/share/apache2/icons/stop.gif
+/srv/www/cgi-bin/oss-stop.cgi
 /usr/share/oss/templates/*
 %config /etc/logrotate.d/oss-blacklist
 %config /etc/squid/squid.conf.in
@@ -97,7 +103,3 @@ fi
 %dir /var/lib/squidGuard/db/custom/bad
 %config(noreplace) /var/lib/squidGuard/db/custom/good/*
 %config(noreplace) /var/lib/squidGuard/db/custom/bad/*
-/usr/share/apache2/icons/stop.gif
-/srv/www/cgi-bin/oss-stop.cgi
-%dir /srv/www/admin
-/srv/www/admin/proxy.pac.in
