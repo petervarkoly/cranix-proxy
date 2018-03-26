@@ -86,13 +86,13 @@ fi
 %dir /srv/www/admin
 /srv/www/admin/proxy.pac.in
 /usr/share/apache2/icons/stop.gif
-/srv/www/cgi-bin/oss-stop.cgi
 /usr/share/oss/templates/*
 %config /etc/logrotate.d/oss-blacklist
 %config /etc/squid/squid.conf.in
 %config /etc/squid/squidguard.conf
 %defattr(755,root,root)
 /etc/cron.weekly/oss-blacklist
+/srv/www/cgi-bin/oss-stop.cgi
 /usr/sbin/oss_*.sh
 /usr/share/oss/tools/*
 %defattr(640,squid,nogroup,750)
