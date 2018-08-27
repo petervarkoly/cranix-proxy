@@ -12,11 +12,17 @@ redirect_program /usr/sbin/squidGuard -c /etc/squid/squidguard.conf
 redirect_children 10
 
 #OSS SSO acl
-external_acl_type checkip ttl=60 children-max=30 %SRC /usr/share/oss/tools/oss_squid_sso.sh
+external_acl_type checkip ttl=60 children-max=30 %SRC /usr/share/oss/tools/oss_squid_sso.pl
 acl SSO external checkip
+
+#OSS ntlm
+auth_param ntlm program /usr/sbin/ntlm_smb_lm_auth WORKGROUP/localhost
+auth_param ntlm children 5
+acl ntlm_users proxy_auth REQUIRED
 
 #Some default ACLs
 acl SSL_ports port 443
+acl SSL_ports port 444		# https for OSS from the out side
 acl Safe_ports port 80          # http
 acl Safe_ports port 21          # ftp
 acl Safe_ports port 443         # https
@@ -28,6 +34,17 @@ acl Safe_ports port 488         # gss-http
 acl Safe_ports port 591         # filemaker
 acl Safe_ports port 777         # multiling http
 acl CONNECT method CONNECT
+
+# Sites which have to be connected directly
+acl direct dstdomain  "/etc/squid/acl_direct"
+always_direct allow direct
+
+# Turn off caching
+no_cache deny all
+
+# Create acl for the good sites
+acl good     dstdomain "/var/lib/squidGuard/db/custom/good/domains"
+acl cephalix dstdomain "/var/lib/squidGuard/db/custom/cephalix/domains"
 
 #
 # Recommended minimum Access Permission configuration:
@@ -42,8 +59,16 @@ http_access deny CONNECT !SSL_ports
 http_access allow localhost manager
 http_access deny manager
 
-# Allow OSS-SSO autorized users
+# Allow clients without autentication
+acl no_auth src "/etc/squid/acl_no_auth"
+http_access allow no_auth
+
+# Allow OSS-SSO and ntlm_users autorized users
+# Allow sites defined in good and cephalix list
 http_access allow SSO
+http_access allow ntlm_users
+http_access allow good
+http_access allow cephalix
 
 # And finally deny all other access to this proxy
 http_access deny all

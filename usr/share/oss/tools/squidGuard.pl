@@ -242,7 +242,7 @@ sub get_lists
 	my @WL = <IN>;
 	close(IN);
 	#@WL = main::sort_by_lang(\@WL);
-	my @LISTS = ('good','bad','in-addr');
+	my @LISTS = ('cephalix','good','bad','in-addr');
         push @LISTS, @WL,@BL,'all';
 	return @LISTS;
 }
