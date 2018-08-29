@@ -38,6 +38,8 @@ sub readRoomSetting
 sub readSetting {
 	my $config = parse_config();
 	my $acls   = find_section($config,{ sectype => 'acl' });
+	my $srcs   = find_sections_by_type($config,'source');
+	$srcs->{default} = 1;
 	my $allAllowed = {};
 	my $reply      = {};
         foreach my $acl (@{$acls->{members}})
@@ -61,7 +63,8 @@ sub readSetting {
 	push @primaries, 'default';
 	foreach my $source ( @primaries ) {
 		chomp $source;
-		next if( $source =~ /^templates|workstations$/ );
+		next if( $source =~ /^templates$/ );
+		next if( ! defined $srcs->{$source} );
 		my @ACLS = ($source);
 		foreach my $pass ( get_lists() ) {
 			chomp $pass;
@@ -99,6 +102,9 @@ sub apply
 	my @primaries = `oss_api_text.sh GET groups/text/byType/primary`;
 	push @primaries, 'default';
 	my @DefinedSources = ();
+	my $config = parse_config();
+	my $srcs   = find_sections_by_type($config,'source');
+	$srcs->{default} = 1;
 	foreach my $acl (get_lists())
 	{
 		chomp $acl;
@@ -107,7 +113,8 @@ sub apply
 			foreach my $p ( @primaries )
 			{
 				chomp $p;
-				next if( $p =~ /^templates|workstations$/ );
+				next if( $p =~ /^templates$/ );
+				next if( ! defined $srcs->{$p} );
 				push @{$acls{$p}}, ($reply->{acls}->{$p}->{$acl} eq "true" ) ? 'all' : 'none';
 			}
 		}
@@ -116,12 +123,12 @@ sub apply
 			foreach my $p ( @primaries )
 			{
 				chomp $p;
-				next if( $p =~ /^templates|workstations$/ );
+				next if( $p =~ /^templates$/ );
+				next if( ! defined $srcs->{$p} );
 				push @{$acls{$p}}, ($reply->{acls}->{$p}->{$acl} eq "true" ) ? $acl : "!$acl";
 			}
 		}
 	}	
-	my $config = parse_config();
 	# Now we save the squidquard config file
  	open SG, ">$conffile";
 	foreach my $sec ( @$config )
@@ -207,7 +214,7 @@ sub apply
 	foreach my $p ( @primaries )
 	{
 		chomp $p;
-		next if( $p =~ /^templates|workstations$/ );
+		next if( $p =~ /^templates$/ );
 		next if( ! defined $acls{$p} );
 		if( $p eq 'default' )
 		{
@@ -710,6 +717,20 @@ sub find_section {
   }
 
 return undef;
+}
+
+sub find_sections_by_type {
+  my $config = shift;
+  my $type   = shift;
+  my %sections = ();
+
+  foreach my $c (@{$config}) {
+    if( $c->{sectype} eq $type ) {
+        $sections{$c->{secname}} = $c;
+    }
+  }
+
+return \%sections;
 }
 
 
