@@ -64,7 +64,7 @@ then
 	. /etc/sysconfig/schoolserver
 	if [ ${1:-0} -lt 1 ]; then
 		#/usr/share/oss/tools/update-squidguard-conf.pl
-		#sed -i "s#^redirect_program.*#redirect_program /usr/sbin/squidGuard -c /etc/squid/squidguard.conf -s#" /etc/squid/squid.conf
+		sed -i "s#oss_squid_sso.sh#oss_squid_sso.pl#" /etc/squid/squid.conf
 		echo "Update."
 	else
 		. /etc/sysconfig/schoolserver
@@ -73,7 +73,6 @@ then
 			ln  /srv/www/admin/proxy.pac /srv/www/admin/wpad.dat
 		fi
 	        cp /etc/squid/squid.conf.in      /etc/squid/squid.conf
-		sed -i s/WORKGROUP/${SCHOOL_WORKGROUP}/ /etc/squid/squid.conf
 		/usr/sbin/oss_init_shallalist.sh
 	fi
         grep -q www.google.de /etc/hosts || echo "216.239.32.20  www.google.de www.google.com www.google.fr www.google.it www.google.hu www.google.en" >> /etc/hosts

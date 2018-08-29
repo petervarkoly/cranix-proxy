@@ -15,11 +15,6 @@ redirect_children 10
 external_acl_type checkip ttl=60 children-max=30 %SRC /usr/share/oss/tools/oss_squid_sso.pl
 acl SSO external checkip
 
-#OSS ntlm
-auth_param ntlm program /usr/sbin/ntlm_smb_lm_auth WORKGROUP/localhost
-auth_param ntlm children 5
-acl ntlm_users proxy_auth REQUIRED
-
 #Some default ACLs
 acl SSL_ports port 443
 acl SSL_ports port 444		# https for OSS from the out side
@@ -63,10 +58,9 @@ http_access deny manager
 acl no_auth src "/etc/squid/acl_no_auth"
 http_access allow no_auth
 
-# Allow OSS-SSO and ntlm_users autorized users
+# Allow OSS-SSO
 # Allow sites defined in good and cephalix list
 http_access allow SSO
-http_access allow ntlm_users
 http_access allow good
 http_access allow cephalix
 
