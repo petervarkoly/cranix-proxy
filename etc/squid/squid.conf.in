@@ -65,5 +65,5 @@ http_access allow good
 http_access allow cephalix
 
 # And finally deny all other access to this proxy
-http_access deny all
+http_access allow all
 
