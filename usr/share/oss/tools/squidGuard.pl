@@ -220,7 +220,8 @@ sub apply
 		{
 			print SG "\t$p {\n";
 			print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
-			print SG "\t\tredirect ".'302:https://admin/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
+			#print SG "\t\tredirect ".'302:https://admin/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
+			print SG "\t\tredirect ".'302:https://admin/'."\n";
 			print SG "\t}\n";
 		}
 		else

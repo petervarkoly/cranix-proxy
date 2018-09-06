@@ -37,9 +37,10 @@ always_direct allow direct
 # Turn off caching
 no_cache deny all
 
-# Create acl for the good sites
-acl good     dstdomain "/var/lib/squidGuard/db/custom/good/domains"
-acl cephalix dstdomain "/var/lib/squidGuard/db/custom/cephalix/domains"
+## Create acl for the good sites
+## Not neccessary when using SSO
+#acl good     dstdomain "/var/lib/squidGuard/db/custom/good/domains"
+#acl cephalix dstdomain "/var/lib/squidGuard/db/custom/cephalix/domains"
 
 #
 # Recommended minimum Access Permission configuration:
@@ -54,16 +55,13 @@ http_access deny CONNECT !SSL_ports
 http_access allow localhost manager
 http_access deny manager
 
-# Allow clients without autentication
-acl no_auth src "/etc/squid/acl_no_auth"
-http_access allow no_auth
+## Allow clients without autentication
+## Not neccessary when using SSO
+#acl no_auth src "/etc/squid/acl_no_auth"
+#http_access allow no_auth
 
 # Allow OSS-SSO
 # Allow sites defined in good and cephalix list
 http_access allow SSO
-http_access allow good
-http_access allow cephalix
-
-# And finally deny all other access to this proxy
 http_access allow all
 

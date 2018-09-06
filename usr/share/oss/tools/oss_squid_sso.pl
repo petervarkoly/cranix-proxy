@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+$| = 1; # do not buffer stdout
+
 while(<STDIN>) {
         chomp;
         my $user = `curl -sX GET --header 'Content-Type: application/json' --header 'Accept: text/plain' http://localhost:9080/api/devices/loggedIn/$_`;
@@ -8,7 +10,7 @@ while(<STDIN>) {
         }
         else
         {
-                print "ERR user=\"No user logged in\"\n";
+                print "OK user=\"default user\"\n";
         }
 }
 
