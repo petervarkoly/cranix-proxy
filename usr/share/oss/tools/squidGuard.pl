@@ -40,7 +40,6 @@ sub readSetting {
 	my $acls   = find_section($config,{ sectype => 'acl' });
 	my $srcs   = find_sections_by_type($config,'source');
 	$srcs->{default} = 1;
-	my $allAllowed = {};
 	my $reply      = {};
         foreach my $acl (@{$acls->{members}})
         {
@@ -53,10 +52,8 @@ sub readSetting {
 				$reply->{acls}->{$source}->{$pass} = "true";
 			}
 		}
-		if( defined $reply->{acls}->{$source}->{all} ) {
-			$allAllowed->{$source} = "true";
-		} else {
-			$allAllowed->{$source} = "false";
+		if( ! defined $reply->{acls}->{$source}->{all} ) {
+			$reply->{acls}->{$source}->{all} = "false";
 		}
         }
 	my @primaries = `oss_api_text.sh GET groups/text/byType/primary`;
@@ -70,11 +67,8 @@ sub readSetting {
 			chomp $pass;
 			if( defined $reply->{acls}->{$source}->{$pass} ) { 
 				push @ACLS, "$pass:".$reply->{acls}->{$source}->{$pass};
-			} elsif ( defined $reply->{acls}->{$source}->{all} ) {
-				push @ACLS, "$pass:".$reply->{acls}->{$source}->{all};
 			} else {
-				my $value = defined $reply->{acls}->{default}->{$pass} ? $reply->{acls}->{default}->{all} : $reply->{acls}->{default}->{all};
-				push @ACLS, "$pass:".$value;
+				push @ACLS, "$pass:".$reply->{acls}->{$source}->{all};
 			}
 		}
 		print join(" ",@ACLS)."\n";
