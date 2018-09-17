@@ -10,7 +10,7 @@ while(<STDIN>) {
         }
         else
         {
-                print "OK user=\"default user\"\n";
+                print "OK user=\"default_user\"\n";
         }
 }
 
