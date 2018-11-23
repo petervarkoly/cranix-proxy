@@ -13,7 +13,6 @@ $LANG = substr($LANG,3,2);
 
 
 $QUERY_STRING = $ENV{'QUERY_STRING'};
-$DOCUMENT_ROOT = '/usr/share/apache2/icons';
 
 $clientaddr = "";
 $clientname = "";
@@ -53,7 +52,7 @@ if ($url =~ /\.(gif|jpg|jpeg|mpg|mpeg|avi|mov)$/i) {
   print "Content-Type: image/gif\n";
   ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
   printf "Expires: %s, %02d-%s-%02d %02d:%02d:%02d GMT\n\n", $day[$wday],$mday,$month[$mon],$year,$hour,$min,$sec;
-  open(GIF, "$DOCUMENT_ROOT/stop.gif");
+  open(GIF, "/srv/www/admin/stop.gif");
   while (<GIF>) {
     print;
   }
