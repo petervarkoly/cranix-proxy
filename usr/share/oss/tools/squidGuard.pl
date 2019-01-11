@@ -230,7 +230,7 @@ sub apply
 	close SG;
 	sgchown();
 	if( $job ne "writeIpSource" && $job ne "writeUserSource") {
-	    system("/usr/sbin/oss_refres_squidGuard_user.sh");
+	    system("/usr/sbin/oss_refresh_squidGuard_user.sh");
 	}
 }
 
