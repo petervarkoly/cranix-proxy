@@ -59,6 +59,7 @@ http_access deny manager
 ## Not neccessary when using SSO
 #acl no_auth src "/etc/squid/acl_no_auth"
 #http_access allow no_auth
+dns_v4_first on
 
 # Allow OSS-SSO
 # Allow sites defined in good and cephalix list

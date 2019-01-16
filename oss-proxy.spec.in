@@ -90,7 +90,6 @@ fi
 %config /etc/logrotate.d/oss-blacklist
 %config /etc/squid/squid.conf.in
 %config(noreplace) /etc/squid/squidguard.conf
-%config(noreplace) /etc/squid/squidguard.conf
 %config(noreplace) /etc/squid/acl_*
 %defattr(755,root,root)
 /etc/cron.weekly/oss-blacklist
