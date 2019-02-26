@@ -142,8 +142,13 @@ sub apply
 				print SG "src $newSource {\n\t".$reply->{sourcetype}." $newSource\n}\n\n";
 			}
 			#TODO at the moment we only can handle userlist type sources
-			my $p = $sec->{members}->[0]->{userlist};
-			print SG "src $p {\n\tuserlist $p\n}\n\n";
+			if( defined $sec->{members}->[0]->{userlist} ) {
+				my $p = $sec->{members}->[0]->{userlist};
+				print SG "src $p {\n\tuserlist $p\n}\n\n";
+			} elsif( defined $sec->{members}->[0]->{iplist} ) {
+				my $p = $sec->{members}->[0]->{iplist};
+				print SG "src $p {\n\tiplist $p\n}\n\n";
+			}
 			$srcWritten = 1;
 		}
 		elsif( $sec->{sectype} eq 'dest' )
@@ -230,7 +235,7 @@ sub apply
 	close SG;
 	sgchown();
 	if( $job ne "writeIpSource" && $job ne "writeUserSource") {
-	    system("/usr/sbin/oss_refresh_squidGuard_user.sh");
+	    system("/usr/sbin/oss_refres_squidGuard_user.sh");
 	}
 }
 
@@ -483,6 +488,14 @@ sub parse_config {
              $st{'stype'}='user';
              $st{'line'}=$i;
              $st{'user'}=$1;
+          push(@members, \%st);
+        } elsif ($c[$i] =~ /^iplist\s+(\S+)/) {
+          my %st;
+             $st{'stype'}='iplist';
+             $st{'line'}=$i;
+             $st{'iplist'}=$1;
+             $st{'iplist'} =~ /\/?([^\/]+)$/;
+             $st{'name'}=$1;
           push(@members, \%st);
         } elsif ($c[$i] =~ /^userlist\s+(\S+)/) {
           my %st;
@@ -889,8 +902,8 @@ elsif( $job eq "writePositiveList" )
 		$reply->{destination} = $NAME;
 		apply($reply);
 	}
-	sgchown();
 	system("echo '' | /usr/sbin/squidGuard -C PL/$NAME/domains -c /etc/squid/squidguard.conf");
+	sgchown();
 }
 elsif( $job eq "write" )
 {
