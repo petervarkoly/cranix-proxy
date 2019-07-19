@@ -12,6 +12,7 @@ my $NAME=shift || 'default';
 
 my @Sources = ();
 my @Destinations = ();
+my @listsToRemove = ();
 
 sub readRoomSetting
 {
@@ -153,6 +154,7 @@ sub apply
 		}
 		elsif( $sec->{sectype} eq 'dest' )
 		{
+			next if(grep(/$sec->{secname}/,@listsToRemove));
 			print SG 'dest '.$sec->{secname}." {\n";
 			print SG "\tdomainlist ".$sec->{domainlist}."\n" if ( defined $sec->{domainlist} );
 			print SG "\turllist    ".$sec->{urllist}."\n"    if ( defined $sec->{urllist} );
@@ -179,6 +181,8 @@ sub apply
 				my @ACLS = ();
 				foreach my $key ( keys %{$reply->{acls}->{$source}} ) {
 					next if($key eq 'all');
+					#This acl will be removed
+					next if(grep(/$key/,@listsToRemove));
 					push @ACLS, $reply->{acls}->{$source}->{$key} eq "true" ? $key : "!$key";
 				}
 				if( defined $reply->{acls}->{$source}->{all} ) {
@@ -931,7 +935,11 @@ elsif( $job eq "write" )
 	while(<>)
 	{
 		if( /(.*):(.*):(.*)$/ ) {
-			$reply->{acls}->{$1}->{$2} = $3;
+			if( $3 eq "delete" ) {
+				 push(@listsToRemove, $2);
+			} else {
+				$reply->{acls}->{$1}->{$2} = $3;
+			}
 		}
 	}
 	apply($reply);
