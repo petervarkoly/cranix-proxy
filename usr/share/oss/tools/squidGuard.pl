@@ -156,9 +156,10 @@ sub apply
 		{
 			next if(grep(/$sec->{secname}/,@listsToRemove));
 			print SG 'dest '.$sec->{secname}." {\n";
-			print SG "\tdomainlist ".$sec->{domainlist}."\n" if ( defined $sec->{domainlist} );
-			print SG "\turllist    ".$sec->{urllist}."\n"    if ( defined $sec->{urllist} );
-			print SG "\tlog        ".$sec->{'log'}."\n"      if ( defined $sec->{'log'} );
+			print SG "\tdomainlist ".$sec->{domainlist}."\n"    if ( defined $sec->{domainlist} );
+			print SG "\turllist    ".$sec->{urllist}."\n"       if ( defined $sec->{urllist} );
+			print SG "\texpressionlist ".$sec->{exprlist}."\n"  if ( defined $sec->{exprlist} );
+			print SG "\tlog        ".$sec->{'log'}."\n"         if ( defined $sec->{'log'} );
 			print SG "}\n\n";
 		}
 		elsif( $sec->{sectype} eq 'acl' )
