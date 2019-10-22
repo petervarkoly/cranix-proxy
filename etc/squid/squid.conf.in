@@ -12,7 +12,7 @@ redirect_program /usr/sbin/squidGuard -c /etc/squid/squidguard.conf
 redirect_children 10
 
 #OSS SSO acl
-external_acl_type checkip ttl=60 children-max=30 ipv4 %SRC /usr/share/oss/tools/oss_squid_sso.pl
+external_acl_type checkip ttl=60 children-max=30 ipv4 %SRC /usr/share/oss/tools/oss_squid_sso.py
 acl SSO external checkip
 
 #Some default ACLs
