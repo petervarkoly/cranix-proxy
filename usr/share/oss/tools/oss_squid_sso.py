@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-import os
+
+import requests
 
 while True:
     ip=input("")
-    user = os.popen("curl -sX GET --header 'Content-Type: application/json' --header 'Accept: text/plain' http://localhost:9080/api/devices/loggedIn/" + ip ).read()
+    user = requests.get('http://localhost:9080/api/devices/loggedIn/' + ip.strip()).text
     if user == "":
         print('OK user="default_user"')
     else:
