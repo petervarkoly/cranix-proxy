@@ -24,11 +24,11 @@ fi
 # immer komplett neu geladen werden und nicht als diff vorliegen.
 # Dazu gibt es auch eine separate Datei: /usr/sbin/oss_init_shallalist.sh
 date >> /var/log/shallainit.log
-/usr/sbin/rcsquid stop >> /var/log/shallainit.log
+/usr/bin/systemctl stop squid >> /var/log/shallainit.log
 /usr/sbin/squidGuard -d -c /etc/squid/squidguard.conf -C all >> /var/log/shallainit.log 2>&1
 /bin/chown -R squid.nogroup /var/lib/squidGuard/db/BL
 /bin/chown -R squid.nogroup /var/log/squidGuard/
-/usr/sbin/rcsquid start >> /var/log/shallainit.log
+/usr/bin/systemctl start squid >> /var/log/shallainit.log
 
 exit 0
 
