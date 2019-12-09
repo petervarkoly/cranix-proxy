@@ -3,7 +3,7 @@
 import requests
 
 while True:
-    ip=input("")
+    ip=input("").split()[0]
     user = requests.get('http://localhost:9080/api/devices/loggedIn/' + ip.strip()).text
     if user == "":
         print('OK user="default_user"')
