@@ -14,7 +14,7 @@ dist:
 		mkdir $(PACKAGE)
 		rsync -aC $(SUBDIRS) $(PACKAGE)
 		tar jcpf $(PACKAGE).tar.bz2 $(PACKAGE)
-		rm -r $(PACKAGE)
+		xterm -e git diff -raw &
 		if [ -d $(REPO)/$(PACKAGE) ] ; then \
 			cd $(REPO)/$(PACKAGE); osc up; cd $(HERE);\
 		        cp $(PACKAGE).tar.bz2 $(REPO)/$(PACKAGE); \
