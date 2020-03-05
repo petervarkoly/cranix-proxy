@@ -11,14 +11,12 @@
 
 /bin/tar xzvf /var/lib/squidGuard/db/shallalist.tar.gz -C /var/lib/squidGuard/db &> /var/log/shallainit.log
 
-/usr/sbin/rcsquid stop
-
+/usr/bin/systemctl stop squid
 # Jetzt die Datenbank neu aufbauen lassen
 /usr/sbin/squidGuard -d -c /etc/squid/squidguard.conf -C all  >> /var/log/shallainit.log
 /bin/chown -R squid:nogroup /var/lib/squidGuard/
 /bin/chown -R squid:nogroup /var/log/squidGuard/
-
-/usr/sbin/rcsquid start
+/usr/bin/systemctl start squid
 
 exit 0
 
