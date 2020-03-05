@@ -23,4 +23,3 @@ dist:
 			osc vc ; \
 		        osc ci -m "New Build Version"; \
 		fi
-
