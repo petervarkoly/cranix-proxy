@@ -6,7 +6,7 @@ function FindProxyForURL(url, host)
     return "DIRECT";
   }else if(dnsDomainIs(host,"schoolserver.#DOMAIN#")){
     return "DIRECT";
-  }else if(dnsDomainIs(host,"schulserver.#DOMAIN#")){
+  }else if(dnsDomainIs(host,"cranix.#DOMAIN#")){
     return "DIRECT";
   }else if(host.substring(0,4)=="127."){
     return "DIRECT";

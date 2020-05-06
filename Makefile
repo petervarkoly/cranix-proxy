@@ -1,7 +1,7 @@
 HERE		= $(shell pwd)
-PACKAGE		=oss-proxy
+PACKAGE		=cranix-proxy
 SUBDIRS		=etc usr var srv
-REPO		=/data1/OSC/home:varkoly:OSS-4-1:leap15.1
+REPO		=/data1/OSC/home:varkoly:CRANIX-4-2
 
 dist:
 		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
