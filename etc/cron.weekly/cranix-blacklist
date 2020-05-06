@@ -22,7 +22,7 @@ fi
 # Erzeugen der Datenbankdateien aus den domain und url Dateien.
 # Muss nach jedem Einspielen der shalla-Listen gemacht werden, da diese
 # immer komplett neu geladen werden und nicht als diff vorliegen.
-# Dazu gibt es auch eine separate Datei: /usr/sbin/oss_init_shallalist.sh
+# Dazu gibt es auch eine separate Datei: /usr/sbin/crx_init_shallalist.sh
 date >> /var/log/shallainit.log
 /usr/bin/systemctl stop squid >> /var/log/shallainit.log
 /usr/sbin/squidGuard -d -c /etc/squid/squidguard.conf -C all >> /var/log/shallainit.log 2>&1

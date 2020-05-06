@@ -2,7 +2,6 @@
 use strict;
 use Data::Dumper;
 use vars qw(@ISA);
-@ISA = qw(oss_base);
 
 my $conffile = '/etc/squid/squidguard.conf';
 my $bin      = '/usr/sbin/squidGuard';
@@ -57,7 +56,7 @@ sub readSetting {
 			$reply->{acls}->{$source}->{all} = "false";
 		}
         }
-	my @primaries = `oss_api_text.sh GET groups/text/byType/primary`;
+	my @primaries = `crx_api_text.sh GET groups/text/byType/primary`;
 	push @primaries, 'default';
 	foreach my $source ( @primaries ) {
 		chomp $source;
@@ -94,7 +93,7 @@ sub apply
 	my $srcWritten = 0;
 	my $aclWritten = 0;
 	my $dbHome     = "/var/lib/squidGuard/db";
-	my @primaries = `oss_api_text.sh GET groups/text/byType/primary`;
+	my @primaries = `crx_api_text.sh GET groups/text/byType/primary`;
 	push @primaries, 'default';
 	my @DefinedSources = ();
 	my $config = parse_config();
@@ -191,7 +190,7 @@ sub apply
 				}
 				print SG "\t$source {\n";
 				print SG "\t\tpass ".join(" ",@ACLS)."\n";
-				print SG "\t\tredirect ".'302:http://admin/cgi-bin/oss-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
+				print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
 				print SG "\t}\n";
 			}
 		}
@@ -212,7 +211,7 @@ sub apply
 		}
 		print SG "\t$source {\n";
 		print SG "\t\tpass ".join(" ",@ACLS)."\n";
-		print SG "\t\tredirect ".'302:http://admin/cgi-bin/oss-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
+		print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
 		print SG "\t}\n";
 	}
 	foreach my $p ( @primaries )
@@ -232,7 +231,7 @@ sub apply
 		{
 			print SG "\t$p {\n";
 			print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
-			print SG "\t\tredirect ".'302:http://admin/cgi-bin/oss-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
+			print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
 			print SG "\t}\n";
 		}
 	}
@@ -240,17 +239,17 @@ sub apply
 	close SG;
 	sgchown();
 	if( $job ne "writeIpSource" && $job ne "writeUserSource") {
-	    system("/usr/sbin/oss_refresh_squidGuard_user.sh");
+	    system("/usr/sbin/crx_refresh_squidGuard_user.sh");
 	}
 }
 
 sub get_lists
 {
-	open(IN,"/usr/share/oss/templates/blacklists");
+	open(IN,"/usr/share/cranix/templates/blacklists");
 	my @BL = <IN>;
 	close(IN);
 	#@BL = main::sort_by_lang(\@BL);
-	open(IN,"/usr/share/oss/templates/whitelists");
+	open(IN,"/usr/share/cranix/templates/whitelists");
 	my @WL = <IN>;
 	close(IN);
 	#@WL = main::sort_by_lang(\@WL);
@@ -947,7 +946,7 @@ elsif( $job eq "write" )
 }
 else
 {
-	print "\n\nUsage /usr/share/oss/tools/squidGuard.pl read|printAll|write\n\n";
+	print "\n\nUsage /usr/share/cranix/tools/squidGuard.pl read|printAll|write\n\n";
 }
 
 1;

@@ -65,7 +65,7 @@ while(<SHALLA>)
 }
 print Dumper($SHALLA);
 close SHALLA;
-open(LANG,">usr/share/oss/templates/squidguard_lang.sql");
+open(LANG,">usr/share/cranix/templates/squidguard_lang.sql");
 foreach my $L (keys %$LANGS)
 {
     for my $i ( 'good', 'bad', 'all', 'in-addr' )
@@ -106,10 +106,10 @@ foreach my $L (keys %$LANGS)
     }
 }
 close LANG;
-open(OUT,">usr/share/oss/templates/blacklists");
+open(OUT,">usr/share/cranix/templates/blacklists");
 print OUT join "\n",sort(@BL);
 close OUT;
-open(OUT,">usr/share/oss/templates/whitelists");
+open(OUT,">usr/share/cranix/templates/whitelists");
 print OUT join "\n",sort(@WL);
 close OUT;
 system("rm -rf BL");
