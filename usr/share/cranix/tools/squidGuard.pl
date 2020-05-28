@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use Data::Dumper;
+use JSON::XS;
 use vars qw(@ISA);
 
 my $conffile = '/etc/squid/squidguard.conf';
@@ -73,6 +74,50 @@ sub readSetting {
 		}
 		print join(" ",@ACLS)."\n";
 	}
+}
+
+sub jsonSetting {
+	my $config = parse_config();
+	my $acls   = find_section($config,{ sectype => 'acl' });
+	my $srcs   = find_sections_by_type($config,'source');
+	$srcs->{default} = 1;
+	my $reply = {};
+	my @array = ();
+        foreach my $acl (@{$acls->{members}})
+        {
+		my $source =  $acl->{source};
+		foreach my $pass ( @{$acl->{pass}} )
+		{
+			if( $pass =~ /!(.*)/ ) {
+				$reply->{acls}->{$source}->{$1} = "false";
+			} else {
+				$reply->{acls}->{$source}->{$pass} = "true";
+			}
+		}
+		if( ! defined $reply->{acls}->{$source}->{all} ) {
+			$reply->{acls}->{$source}->{all} = "false";
+		}
+        }
+	my @primaries = `crx_api_text.sh GET groups/text/byType/primary`;
+	push @primaries, 'default';
+	foreach my $pass ( get_lists() ) {
+		chomp $pass;
+		my $acl = {};
+		$acl->{'name'} = $pass;
+		foreach my $source ( @primaries ) {
+			chomp $source;
+			next if( $source =~ /^templates$/ );
+			next if( ! defined $srcs->{$source} );
+			if( defined $reply->{acls}->{$source}->{$pass} ) {
+				$acl->{$source} = $reply->{acls}->{$source}->{$pass};
+			} else {
+				$acl->{$source} = $reply->{acls}->{$source}->{all};
+			}
+		}
+		push @array,$acl; 
+	}
+	#print Dumper(\@array);
+	print encode_json(\@array);	
 }
 
 sub printAll {
@@ -790,7 +835,11 @@ sub execute
         return $ret;
 }
 
-if( $job eq "read" )
+if( $job eq "readJson" )
+{
+	jsonSetting();
+}
+elsif( $job eq "read" )
 {
 	readSetting();
 }
