@@ -2,6 +2,7 @@
 use strict;
 use Data::Dumper;
 use JSON::XS;
+use Types::Serialiser;
 use vars qw(@ISA);
 
 my $conffile = '/etc/squid/squidguard.conf';
@@ -89,13 +90,13 @@ sub jsonSetting {
 		foreach my $pass ( @{$acl->{pass}} )
 		{
 			if( $pass =~ /!(.*)/ ) {
-				$reply->{acls}->{$source}->{$1} = "false";
+				$reply->{acls}->{$source}->{$1} = Types::Serialiser::false;
 			} else {
-				$reply->{acls}->{$source}->{$pass} = "true";
+				$reply->{acls}->{$source}->{$pass} = Types::Serialiser::true;
 			}
 		}
 		if( ! defined $reply->{acls}->{$source}->{all} ) {
-			$reply->{acls}->{$source}->{all} = "false";
+			$reply->{acls}->{$source}->{all} = Types::Serialiser::false;
 		}
         }
 	my @primaries = `crx_api_text.sh GET groups/text/byType/primary`;
