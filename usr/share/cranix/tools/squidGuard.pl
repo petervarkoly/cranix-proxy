@@ -102,6 +102,7 @@ sub jsonSetting {
 	my @primaries = `crx_api_text.sh GET groups/text/byType/primary`;
 	push @primaries, 'default';
 	foreach my $pass ( get_lists() ) {
+		next if( $pass =~ /^cephalix|good|bad$/ );
 		chomp $pass;
 		my $acl = {};
 		$acl->{'name'} = $pass;
@@ -959,6 +960,42 @@ elsif( $job eq "writePositiveList" )
 	system("echo '' | /usr/sbin/squidGuard -C PL/$NAME/domains -c /etc/squid/squidguard.conf");
 	sgchown();
 }
+elsif( $job eq "writeJson" )
+{
+	my $config = parse_config();
+	my $acls   = find_section($config,{ sectype => 'acl' });
+	my $allAllowed = {};
+	my $reply      = {};
+	my $var = do { local $/; <> };
+	my $readAcls = decode_json($var);
+        foreach my $acl (@{$acls->{members}})
+        {
+		my $source =  $acl->{source};
+		foreach my $pass ( @{$acl->{pass}} )
+		{
+			if( $pass =~ /!(.*)/ ) {
+				$reply->{acls}->{$source}->{$1} = "false";
+			} else {
+				$reply->{acls}->{$source}->{$pass} = "true";
+			}
+		}
+		if( defined $reply->{acls}->{$source}->{all} ) {
+			$allAllowed->{$source} = "true";
+		} else {
+			$allAllowed->{$source} = "false";
+		}
+        }
+	foreach my $acl ( @$readAcls )
+	{
+		my $name = $acl->{name};
+		foreach my $key ( keys %$acl )
+		{
+			next if( $key eq 'name' );
+			$reply->{acls}->{$key}->{$name} = $acl->{$key} ? 'true' : 'false';
+		}
+	}
+	apply($reply);
+}
 elsif( $job eq "write" )
 {
 	my $config = parse_config();
@@ -996,7 +1033,7 @@ elsif( $job eq "write" )
 }
 else
 {
-	print "\n\nUsage /usr/share/cranix/tools/squidGuard.pl read|printAll|write\n\n";
+	print "\n\nUsage /usr/share/cranix/tools/squidGuard.pl read|printAll|write|writeJson|readJson|writePositiveList|writeIpSource|writeUserSource\n\n";
 }
 
 1;
