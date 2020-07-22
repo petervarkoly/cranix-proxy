@@ -1033,7 +1033,7 @@ elsif( $job eq "write" )
 }
 else
 {
-	print "\n\nUsage /usr/share/cranix/tools/squidGuard.pl read|printAll|write|writeJson|readJson|writePositiveList|writeIpSource|writeUserSource\n\n";
+	print "\n\nUsage /usr/share/cranix/tools/squidGuard.pl read|printAll|write\n\n";
 }
 
 1;
