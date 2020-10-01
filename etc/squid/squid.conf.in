@@ -31,8 +31,8 @@ acl Safe_ports port 777         # multiling http
 acl CONNECT method CONNECT
 
 # Sites which have to be connected directly
-acl direct dstdomain  "/etc/squid/acl_direct"
-always_direct allow direct
+#acl direct dstdomain  "/etc/squid/acl_direct"
+#always_direct allow direct
 
 # Turn off caching
 no_cache deny all
