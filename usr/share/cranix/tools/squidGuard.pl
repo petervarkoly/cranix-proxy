@@ -227,10 +227,14 @@ sub apply
 				next if( defined $reply->{acls}->{$source}->{'remove-this-list'} );
 				my @ACLS = ();
 				foreach my $key ( keys %{$reply->{acls}->{$source}} ) {
-					next if($key eq 'all');
+					next if($key eq 'all' or $key eq 'none');
 					#This acl will be removed
 					next if(grep(/$key/,@listsToRemove));
-					push @ACLS, $reply->{acls}->{$source}->{$key} eq "true" ? $key : "!$key";
+					if( $reply->{acls}->{$source}->{all} eq "true" ) {
+						push @ACLS, "!$key" if $reply->{acls}->{$source}->{$key} eq "false";
+					} else {
+						push @ACLS, "$key" if $reply->{acls}->{$source}->{$key} eq "true";
+					}
 				}
 				if( defined $reply->{acls}->{$source}->{all} ) {
 					push @ACLS, $reply->{acls}->{$source}->{all} eq "true" ? 'all' : 'none';
@@ -248,8 +252,12 @@ sub apply
 		next if( defined $reply->{acls}->{$source}->{'remove-this-list'} );
 		my @ACLS = ();
 		foreach my $key ( keys %{$reply->{acls}->{$source}} ) {
-			next if($key eq 'all');
-			push @ACLS, $reply->{acls}->{$source}->{$key} eq "true" ? $key : "!$key";
+                        next if($key eq 'all' or $key eq 'none');
+			if( $reply->{acls}->{$source}->{all} eq "true" ) {
+				push @ACLS, "!$key" if $reply->{acls}->{$source}->{$key} eq "false";
+			} else {
+				push @ACLS, "$key" if $reply->{acls}->{$source}->{$key} eq "true";
+			}
 		}
 		if( defined $reply->{acls}->{$source}->{all} ) {
 			push @ACLS, $reply->{acls}->{$source}->{all} eq "true" ? 'all' : 'none';
@@ -266,10 +274,21 @@ sub apply
 		chomp $p;
 		next if( $p =~ /^templates$/ );
 		next if( ! defined $acls{$p} );
+                my @ACLS = ();
+                foreach my $key ( keys %{$reply->{acls}->{$p}} ) {
+                        next if($key eq 'all' or $key eq 'none');
+                        #print $reply->{acls}->{$p}->{all}.",".$reply->{acls}->{$p}->{$key}."\n";
+                        if( $reply->{acls}->{$p}->{all} eq "true" ) {
+                                push @ACLS, "!$key" if $reply->{acls}->{$p}->{$key} eq "false";
+                        } else {
+                                push @ACLS, "$key" if $reply->{acls}->{$p}->{$key} eq "true";
+                        }
+                }
+                push @ACLS, $reply->{acls}->{$p}->{all} eq "true" ? 'all' : 'none';
 		if( $p eq 'default' )
 		{
 			print SG "\t$p {\n";
-			print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
+			print SG "\t\tpass ".join(" ",@ACLS)."\n";
 			#print SG "\t\tredirect ".'302:https://admin/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
 			print SG "\t\tredirect ".'302:https://admin/'."\n";
 			print SG "\t}\n";
@@ -277,7 +296,7 @@ sub apply
 		else
 		{
 			print SG "\t$p {\n";
-			print SG "\t\tpass ".join(" ",@{$acls{$p}})."\n";
+			print SG "\t\tpass ".join(" ",@ACLS)."\n";
 			print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$p.'&targetclass=%t&url=%u'."\n";
 			print SG "\t}\n";
 		}
