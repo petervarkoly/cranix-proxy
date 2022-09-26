@@ -1,37 +1,33 @@
 #!/bin/sh
-
-# Umstellung der Sperrlisten fuer squidGuard auf die Listen von www.shallalist.de
+# Update der Sperrlisten fuer squidGuard auf die Listen von repo.cephalix.eu
 #
+# (C) 2022 Peter Varkoly <pvarkoly@cephalix.eu>
 # Thomas Litsch <tl@extis.de>, 24.04.2008
 #
 
 # Neue Listen runterladen
 
 cd /var/lib/squidGuard/db
-if test -e shallalist-new.tar.gz
-    then
-    mv shallalist-new.tar.gz shallalist.tar.gz.old
-fi
-/usr/bin/wget -O shallalist-new.tar.gz -o /var/log/shallalist-updates.log http://www.shallalist.de/Downloads/shallalist.tar.gz
-if [ ! -s shallalist-new.tar.gz ]; then
-	echo "Schalla list could not been downlowded"
+rm -f cranix-blacklists.txz
+
+/usr/bin/wget -O cranix-blacklists.txz -o /var/log/cranix-blacklists-updates.log http://repo.cephalix.eu/cranix-blacklists.txz
+if [ ! -s cranix-blacklists.txz ]; then
+	echo "Cranix list could not been downlowded"
 	exit 1
 fi
-/bin/tar xzf shallalist-new.tar.gz 
+/bin/tar xzf cranix-blacklists.txz
 
 # Erzeugen der Datenbankdateien aus den domain und url Dateien.
-# Muss nach jedem Einspielen der shalla-Listen gemacht werden, da diese
+# Muss nach jedem Einspielen der Listen gemacht werden, da diese
 # immer komplett neu geladen werden und nicht als diff vorliegen.
-# Dazu gibt es auch eine separate Datei: /usr/sbin/crx_init_shallalist.sh
-date >> /var/log/shallainit.log
-/usr/bin/systemctl stop squid >> /var/log/shallainit.log
-/usr/sbin/squidGuard -d -c /etc/squid/squidguard.conf -C all >> /var/log/shallainit.log 2>&1
+date >> /var/log/cranix-blacklists-updates.log
+/usr/bin/systemctl stop squid >> /var/log/cranix-blacklists-updates.log
+/usr/sbin/squidGuard -d -c /etc/squid/squidguard.conf -C all >> /var/log/cranix-blacklists-updates.log 2>&1
 /bin/chown -R squid.nogroup /var/lib/squidGuard/db/BL
 /bin/chown -R squid.nogroup /var/log/squidGuard/
-/usr/bin/systemctl start squid >> /var/log/shallainit.log
+/usr/bin/systemctl start squid >> /var/log/cranix-blacklists-updates.log
 
 exit 0
 
 # Die muesste/koennte noch eingebunden werden...
-# Verwendet aber andere Klassifikationen als shalla
 #/usr/bin/wget ftp://ftp.univ-tlse1.fr/pub/reseau/cache/squidguard_contrib/blacklists.tar.gz

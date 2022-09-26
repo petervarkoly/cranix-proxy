@@ -1,4 +1,4 @@
-/var/log/shallainit.log {
+/var/log/cranix-blacklists-updates.log {
     compress
     dateext
     maxage 365

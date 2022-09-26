@@ -228,6 +228,7 @@ sub apply
 				my @ACLS = ();
 				foreach my $key ( keys %{$reply->{acls}->{$source}} ) {
 					next if($key eq 'all' or $key eq 'none');
+					next if( not scalar(grep(/^$key$/,@Destinations)) );
 					#This acl will be removed
 					next if(grep(/$key/,@listsToRemove));
 					if( $reply->{acls}->{$source}->{all} eq "true" ) {
@@ -241,7 +242,7 @@ sub apply
 				}
 				print SG "\t$source {\n";
 				print SG "\t\tpass ".join(" ",@ACLS)."\n";
-				print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
+				print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=CRXPositiveList&url=%u'."\n";
 				print SG "\t}\n";
 			}
 		}
@@ -253,6 +254,7 @@ sub apply
 		my @ACLS = ();
 		foreach my $key ( keys %{$reply->{acls}->{$source}} ) {
                         next if($key eq 'all' or $key eq 'none');
+			next if( not scalar(grep(/^$key$/,@Destinations)) );
 			if( $reply->{acls}->{$source}->{all} eq "true" ) {
 				push @ACLS, "!$key" if $reply->{acls}->{$source}->{$key} eq "false";
 			} else {
@@ -266,7 +268,7 @@ sub apply
 		}
 		print SG "\t$source {\n";
 		print SG "\t\tpass ".join(" ",@ACLS)."\n";
-		print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=OSSPositiveList&url=%u'."\n";
+		print SG "\t\tredirect ".'302:http://admin/cgi-bin/cranix-stop.cgi/?clientaddr=%a&clientname=%n&clientident=%i&srcclass='.$source.'&targetclass=CRXPositiveList&url=%u'."\n";
 		print SG "\t}\n";
 	}
 	foreach my $p ( @primaries )
@@ -277,7 +279,7 @@ sub apply
                 my @ACLS = ();
                 foreach my $key ( keys %{$reply->{acls}->{$p}} ) {
                         next if($key eq 'all' or $key eq 'none');
-                        #print $reply->{acls}->{$p}->{all}.",".$reply->{acls}->{$p}->{$key}."\n";
+			next if( not scalar(grep(/^$key$/,@Destinations)) );
                         if( $reply->{acls}->{$p}->{all} eq "true" ) {
                                 push @ACLS, "!$key" if $reply->{acls}->{$p}->{$key} eq "false";
                         } else {

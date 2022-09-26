@@ -1,15 +1,10 @@
 HERE		= $(shell pwd)
 PACKAGE		=cranix-proxy
 SUBDIRS		=etc usr var srv
-REPO		=/data1/OSC/home:varkoly:CRANIX-4-2
+REPO		=/data1/OSC/home:pvarkoly:CRANIX
 
 dist:
-		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-		echo "Read shalla list if necesary:"
-		echo "   wget http://www.shallalist.de/Downloads/shallalist.tar.gz"
-		echo "   tar xzf shallalist.tar.gz"
-		echo "   mv shallalist.tar.gz var/lib/squidGuard/db/shallalist.tar.gz"
-		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+		./read_cranix_bl.pl
 		if [ -e $(PACKAGE) ] ;  then rm -rf $(PACKAGE) ; fi
 		mkdir $(PACKAGE)
 		rsync -aC $(SUBDIRS) $(PACKAGE)
